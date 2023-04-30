@@ -66,7 +66,7 @@ function definition_repr(ctx::Context, ::Type{NTuple{N, T}}) where {N,T}
 end 
 
 function definition_repr(ctx::Context, T::Type{<:Tuple})
-    string("rust.tuple([", join((definition_repr(ctx, p) for p in T.parameters), ","), "])")
+    string("ffi.rust.tuple([", join((definition_repr(ctx, p) for p in T.parameters), ","), "])")
 end 
 
 function definition_repr(ctx::Context, ::Type{Base.RefValue{T}}) where T
@@ -89,7 +89,7 @@ function js_def(x::T; ctx = Context()) where T
                         ",\n")
         end
     end
-    s *= "})\n"
+    s *= "})"
     return s
 end
 
@@ -104,7 +104,7 @@ function js_def(x::Base.RefValue{T}; ctx = Context()) where T
 end
 
 function js_def(x::T; ctx = Context()) where T <: Tuple
-    string("new rust.tuple([", 
+    string("new ffi.rust.tuple([", 
            join((definition_repr(ctx, p) for p in T.parameters), ","), "], [",
            join((js_def(z; ctx) for z in x), ", "), "])")
 end
@@ -113,7 +113,8 @@ function js_repr(x)
     ctx = Context()
     string(
         js_types(typeof(x); ctx),
-        js_def(x; ctx)
+        js_def(x; ctx),
+        "\n"
     )
 end
 
