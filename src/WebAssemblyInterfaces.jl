@@ -113,8 +113,9 @@ function js_repr(x)
     ctx = Context()
     string(
         js_types(typeof(x); ctx),
+        "\n",
         js_def(x; ctx),
-        "\n"
+        "\n",
     )
 end
 

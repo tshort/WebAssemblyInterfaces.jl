@@ -44,7 +44,37 @@ print(js_repr(x))
 
 Here is the JavaScript code that is printed:
 ```js
+const Y = new ffi.Struct({
+    a: 'f64',
+    b: 'int64',
+    c: ffi.rust.tuple(['int64','f64']),
+});
 
+const YInt64_Int64_Int64 = new ffi.Struct({
+    a: 'int64',
+    b: 'int64',
+    c: 'int64',
+});
+
+const X = new ffi.Struct({
+    a: 'int64',
+    b: Y,
+    c: YInt64_Int64_Int64,
+});
+
+new X({
+a: 2,
+b: new Y({
+a: 1.1,
+b: 2,
+c: new ffi.rust.tuple(['int64','f64'], [1, 1.1]),
+}),
+c: new YInt64_Int64_Int64({
+a: 1,
+b: 2,
+c: 3,
+}),
+})
 ```
 
 Here is a Julia function that could operate on this object. This can be compiled with [StaticCompiler](https://github.com/tshort/StaticCompiler.jl). The Julia code can read data from the object passed in, and it can write to this object in memory.
