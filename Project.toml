@@ -1,0 +1,13 @@
+name = "WebAssemblyInterface"
+uuid = "74d8c2bb-7b3a-4d47-ac1c-f80c5e9b8189"
+authors = ["Tom Short"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
