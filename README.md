@@ -4,6 +4,8 @@
 
 NOTE: This is still experimental, and not all features have been tested with WebAssembly.
 
+For a working example, see this [Lorenz Attraction App in Julia](http://tshort.github.io/Lorenz-WebAssembly-Model.jl). 
+
 This is a small package to write out definitions in JavaScript that correspond to Julia types and object definitions. This JavaScript code is meant to be used with the [wasm-ffi](https://github.com/DeMille/wasm-ffi/tree/master) package, a great package for interfacing between JavaScript and WebAssembly. This allows JavaScript to read and write to memory that is shared by the Julia code (after being compiled to WebAssembly). The [wasm-ffi](https://github.com/DeMille/wasm-ffi/tree/master) package writes to the same memory layout used by Julia.
 
 The following types are supported:
@@ -91,7 +93,10 @@ wasm_path = compile_wasm(f, Tuple{typeof(x)}, flags = `walloc.o`)
 
 ```
 
-### Still in Progress
+### Options going forward
 
 * Should we include a copy of `wasm-ffi.browser.js`? It makes sense if we add support for more Julia types.
-* Figure out where `walloc.o` should live.
+
+* Figure out where `walloc.o` should live. Should we add object code from other sources to make WebAssembly easier?
+
+* We could create and package a set of method overrides for StaticCompiler that are targeted at WebAssembly. We could also develop Mixtape passes to be able to compile more code.

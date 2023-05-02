@@ -73,6 +73,10 @@ function definition_repr(ctx::Context, ::Type{Base.RefValue{T}}) where T
     string("types.pointer(", definition_repr(ctx, T), ")")
 end 
 
+function definition_repr(ctx::Context, ::Type{<:Enum})  # kludge for now
+    string("'int32'")
+end 
+
 function js_types(T::Type; ctx = Context())
     definition_repr(ctx, T)
     return join(ctx.new_types, "\n")
@@ -108,6 +112,10 @@ function js_def(x::T; ctx = Context()) where T <: Tuple
            join((definition_repr(ctx, p) for p in T.parameters), ","), "], [",
            join((js_def(z; ctx) for z in x), ", "), "])")
 end
+
+function js_def(x::Enum; ctx = Context())  # kludge for now
+    Int32(x)
+end 
 
 function js_repr(x)
     ctx = Context()
