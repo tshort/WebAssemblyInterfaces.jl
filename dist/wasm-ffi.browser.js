@@ -96,8 +96,8 @@ class CustomType {
   }
 
   write(view, value) {
-    Object(__WEBPACK_IMPORTED_MODULE_0__misc__["c" /* assert */])(value instanceof ArrayBuffer || ArrayBuffer.isView(value),
-      'Value must be an `ArrayBuffer` or a `DataView` (like `Uint8Array`)');
+    // assert(value instanceof ArrayBuffer || ArrayBuffer.isView(value),
+    //   'Value must be an `ArrayBuffer` or a `DataView` (like `Uint8Array`)');
 
     Object(__WEBPACK_IMPORTED_MODULE_0__misc__["f" /* toUint8Array */])(view).set(Object(__WEBPACK_IMPORTED_MODULE_0__misc__["f" /* toUint8Array */])(value));
   }
@@ -267,6 +267,35 @@ types.pointer = function(typedef) {
 
       if (!value.ref()) wrapper.writePointer(value);
       view.setUint32(0, value.ref(), true /* little-endian */);
+    },
+  };
+};
+
+types.pointer64 = function(typedef) {
+  const type = parseType(typedef);
+
+  return {
+    type,
+    width: 8,
+    alignment: 8,
+    isPointer: true,
+
+    read(view, wrapper) {
+      const addr = view.getBigUint64(0, true /* little-endian */);
+      const data = new DataView(view.buffer, addr, type.width);
+
+      const pointer = new Pointer(type);
+      pointer.view = data;
+      pointer.wrapper = wrapper;
+
+      return pointer;
+    },
+
+    write(view, value, wrapper) {
+      Object(__WEBPACK_IMPORTED_MODULE_0__misc__["c" /* assert */])(value instanceof Pointer, `Trying to write ${value} as a pointer`);
+
+      if (!value.ref()) wrapper.writePointer(value);
+      view.setBigUint64(0, BigInt(value.ref()), true /* little-endian */);
     },
   };
 };
@@ -1151,20 +1180,22 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Struct__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__demangle__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__rust__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__assemblyscript__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__types__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__encoding__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__julia__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__assemblyscript__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__types__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__encoding__ = __webpack_require__(2);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Wrapper", function() { return __WEBPACK_IMPORTED_MODULE_0__Wrapper__["a"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "cwrap", function() { return __WEBPACK_IMPORTED_MODULE_0__Wrapper__["c"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "ccall", function() { return __WEBPACK_IMPORTED_MODULE_0__Wrapper__["b"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Struct", function() { return __WEBPACK_IMPORTED_MODULE_1__Struct__["a"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "types", function() { return __WEBPACK_IMPORTED_MODULE_5__types__["e"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "CustomType", function() { return __WEBPACK_IMPORTED_MODULE_5__types__["a"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Pointer", function() { return __WEBPACK_IMPORTED_MODULE_5__types__["b"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "StringPointer", function() { return __WEBPACK_IMPORTED_MODULE_5__types__["c"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "types", function() { return __WEBPACK_IMPORTED_MODULE_6__types__["e"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "CustomType", function() { return __WEBPACK_IMPORTED_MODULE_6__types__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "Pointer", function() { return __WEBPACK_IMPORTED_MODULE_6__types__["b"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "StringPointer", function() { return __WEBPACK_IMPORTED_MODULE_6__types__["c"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "demangle", function() { return __WEBPACK_IMPORTED_MODULE_2__demangle__["a"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "rust", function() { return __WEBPACK_IMPORTED_MODULE_3__rust__["a"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "assemblyscript", function() { return __WEBPACK_IMPORTED_MODULE_4__assemblyscript__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "julia", function() { return __WEBPACK_IMPORTED_MODULE_4__julia__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "assemblyscript", function() { return __WEBPACK_IMPORTED_MODULE_5__assemblyscript__["a"]; });
 
 
 
@@ -1173,24 +1204,26 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
-const _encodeUTF8 = __WEBPACK_IMPORTED_MODULE_6__encoding__["d" /* encodeUTF8 */];
-const _decodeUTF8 = __WEBPACK_IMPORTED_MODULE_6__encoding__["b" /* decodeUTF8 */];
 
-const CString = __WEBPACK_IMPORTED_MODULE_5__types__["c" /* StringPointer */];
+const _encodeUTF8 = __WEBPACK_IMPORTED_MODULE_7__encoding__["d" /* encodeUTF8 */];
+const _decodeUTF8 = __WEBPACK_IMPORTED_MODULE_7__encoding__["b" /* decodeUTF8 */];
+
+const CString = __WEBPACK_IMPORTED_MODULE_6__types__["c" /* StringPointer */];
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   Wrapper: __WEBPACK_IMPORTED_MODULE_0__Wrapper__["a" /* Wrapper */],
   cwrap: __WEBPACK_IMPORTED_MODULE_0__Wrapper__["c" /* cwrap */],
   ccall: __WEBPACK_IMPORTED_MODULE_0__Wrapper__["b" /* ccall */],
   Struct: __WEBPACK_IMPORTED_MODULE_1__Struct__["a" /* default */],
-  types: __WEBPACK_IMPORTED_MODULE_5__types__["e" /* types */],
-  CustomType: __WEBPACK_IMPORTED_MODULE_5__types__["a" /* CustomType */],
-  Pointer: __WEBPACK_IMPORTED_MODULE_5__types__["b" /* Pointer */],
-  StringPointer: __WEBPACK_IMPORTED_MODULE_5__types__["c" /* StringPointer */],
+  types: __WEBPACK_IMPORTED_MODULE_6__types__["e" /* types */],
+  CustomType: __WEBPACK_IMPORTED_MODULE_6__types__["a" /* CustomType */],
+  Pointer: __WEBPACK_IMPORTED_MODULE_6__types__["b" /* Pointer */],
+  StringPointer: __WEBPACK_IMPORTED_MODULE_6__types__["c" /* StringPointer */],
   CString, // deprecated
   demangle: __WEBPACK_IMPORTED_MODULE_2__demangle__["a" /* default */],
   rust: __WEBPACK_IMPORTED_MODULE_3__rust__["a" /* default */],
-  assemblyscript: __WEBPACK_IMPORTED_MODULE_4__assemblyscript__["a" /* default */],
+  julia: __WEBPACK_IMPORTED_MODULE_4__julia__["a" /* default */],
+  assemblyscript: __WEBPACK_IMPORTED_MODULE_5__assemblyscript__["a" /* default */],
   _encodeUTF8,
   _decodeUTF8,
 });
@@ -2149,6 +2182,84 @@ const rust = {
 
 /***/ }),
 /* 8 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Struct__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__encoding__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__misc__ = __webpack_require__(1);
+
+
+
+
+
+
+// get the symbol for struct-data since we need access here
+const DATA = (typeof Symbol !== 'undefined')
+  ? Symbol.for('struct-data')
+  : '__data';
+
+function MallocArray64(typedef, n, initialValues) {
+  const type = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])(typedef);
+
+  const Base = new __WEBPACK_IMPORTED_MODULE_0__Struct__["a" /* default */]({
+    ptr: ffi.types.pointer64(type),
+    length: 'uint64',
+    size: ['uint64', n],
+    /* values */
+  });
+
+  Object.defineProperty(Base.prototype, 'values', {
+    enumerable: true,
+
+    get() {
+      const memory = this[DATA].view.buffer;
+      const wrapper = this[DATA].wrapper;
+
+      const arrayType = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])([type, this.length]);
+      const view = new DataView(memory, this.ptr.ref(), arrayType.width);
+
+      return arrayType.read(view, wrapper);
+    },
+
+    set(values) {
+      this.ptr = new __WEBPACK_IMPORTED_MODULE_1__types__["b" /* Pointer */]([type, values.length], values);
+      this.length = values.length;
+      this.cap = values.length;
+    },
+  });
+
+  Object(__WEBPACK_IMPORTED_MODULE_3__misc__["a" /* addArrayFns */])(Base);
+  Object(__WEBPACK_IMPORTED_MODULE_3__misc__["e" /* makeIterable */])(Base);
+
+  class Vector extends Base {
+    constructor(values) {
+      super();
+      if (values) this.values = values;
+    }
+
+    free() {
+      super.free(true); // free ptr data
+    }
+  }
+
+  return (initialValues)
+    ? new Vector(initialValues)
+    : Vector;
+}
+
+const julia = {
+  MallocArray64:  MallocArray64,
+
+};
+
+
+/* harmony default export */ __webpack_exports__["a"] = (julia);
+
+
+/***/ }),
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

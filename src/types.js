@@ -19,8 +19,8 @@ class CustomType {
   }
 
   write(view, value) {
-    assert(value instanceof ArrayBuffer || ArrayBuffer.isView(value),
-      'Value must be an `ArrayBuffer` or a `DataView` (like `Uint8Array`)');
+    // assert(value instanceof ArrayBuffer || ArrayBuffer.isView(value),
+    //   'Value must be an `ArrayBuffer` or a `DataView` (like `Uint8Array`)');
 
     toUint8Array(view).set(toUint8Array(value));
   }
@@ -190,6 +190,35 @@ types.pointer = function(typedef) {
 
       if (!value.ref()) wrapper.writePointer(value);
       view.setUint32(0, value.ref(), true /* little-endian */);
+    },
+  };
+};
+
+types.pointer64 = function(typedef) {
+  const type = parseType(typedef);
+
+  return {
+    type,
+    width: 8,
+    alignment: 8,
+    isPointer: true,
+
+    read(view, wrapper) {
+      const addr = view.getBigUint64(0, true /* little-endian */);
+      const data = new DataView(view.buffer, addr, type.width);
+
+      const pointer = new Pointer(type);
+      pointer.view = data;
+      pointer.wrapper = wrapper;
+
+      return pointer;
+    },
+
+    write(view, value, wrapper) {
+      assert(value instanceof Pointer, `Trying to write ${value} as a pointer`);
+
+      if (!value.ref()) wrapper.writePointer(value);
+      view.setBigUint64(0, BigInt(value.ref()), true /* little-endian */);
     },
   };
 };
