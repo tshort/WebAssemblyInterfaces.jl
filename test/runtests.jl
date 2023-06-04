@@ -45,6 +45,12 @@ c: 3,
 })
 """)
 
+
+s = js_repr(ones(3,2))
+
+@test contains(s, "new ffi.julia.Array64('f64', [3, 2], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, ])")
+
+
 # More sophisticated tests could use NodeJS.jl to run some JavaScript/WebAssembly.
 
 end
