@@ -7,6 +7,7 @@ It provides the following extensions for Julia code:
 
 * `ffi.julia.Array64`
 * `ffi.julia.Array32`  (not done, yet)
+* `ffi.julia.Tuple`
 * `ffi.julia.MallocArray64`     (from [StaticTools](https://github.com/brenhinkeller/StaticTools.jl))
 * `ffi.julia.MallocArray32`  (not done, yet)
 
@@ -32,5 +33,6 @@ ffi.julia.Array64(`f64`, 1)
 For the type definition, the second argument is the number of dimensions
 in the array.
 
-To build the packaged JavaScript files, run `npx webpack` in this folder.
+To build the packaged JavaScript files, run `npx webpack` in this folder. 
+To initialize NPM stuff, run `npm install`.
 
