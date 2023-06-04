@@ -2226,7 +2226,7 @@ function MallocArray64(typedef, n, initialValues) {
     set(values) {
       this.ptr = new __WEBPACK_IMPORTED_MODULE_1__types__["b" /* Pointer */]([type, values.length], values);
       this.length = values.length;
-      this.cap = values.length;
+      // this.cap = values.length;
     },
   });
 
@@ -2249,8 +2249,64 @@ function MallocArray64(typedef, n, initialValues) {
     : Vector;
 }
 
+function Array64(typedef, dims = 1, initialValues) {
+  const type = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])(typedef);
+
+  const Base = new __WEBPACK_IMPORTED_MODULE_0__Struct__["a" /* default */]({
+    ptr: ffi.types.pointer64(type),
+    length: 'uint64',
+    flags:  'uint16',
+    elsize: 'uint16',
+    offset: 'uint32',
+    size: ['uint64', dims],
+    /* values */
+  });
+
+  Object.defineProperty(Base.prototype, 'values', {
+    enumerable: true,
+
+    get() {
+      const memory = this[DATA].view.buffer;
+      const wrapper = this[DATA].wrapper;
+
+      const arrayType = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])([type, this.length]);
+      const view = new DataView(memory, this.ptr.ref(), arrayType.width);
+
+      return arrayType.read(view, wrapper);
+    },
+
+    set(values) {
+      this.ptr = new __WEBPACK_IMPORTED_MODULE_1__types__["b" /* Pointer */]([type, values.length], values);
+      this.length = values.length;
+      this.flags = dims.length * 4;
+      this.elsize = type.width;
+      this.offset = 0;
+      this.size = dims;
+    },
+  });
+
+  Object(__WEBPACK_IMPORTED_MODULE_3__misc__["a" /* addArrayFns */])(Base);
+  Object(__WEBPACK_IMPORTED_MODULE_3__misc__["e" /* makeIterable */])(Base);
+
+  class Array extends Base {
+    constructor(values) {
+      super();
+      if (values) this.values = values;
+    }
+
+    free() {
+      super.free(true); // free ptr data
+    }
+  }
+
+  return (initialValues)
+    ? new Array(initialValues)
+    : Array;
+}
+
 const julia = {
   MallocArray64:  MallocArray64,
+  Array64:        Array64,
 
 };
 
