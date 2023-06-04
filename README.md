@@ -97,9 +97,9 @@ wasm_path = compile_wasm(f, Tuple{typeof(x)}, flags = `walloc.o`)
 
 This repository also contains distribution code for the [wasm-ffi](https://github.com/DeMille/wasm-ffi/) package from [this fork](https://github.com/tshort/wasm-ffi/). This includes extensions for supporting Julia code. That includes:
 * `ffi.julia.Array64`
-* `ffi.julia.Array32`
+* `ffi.julia.Array32`  (not done, yet)
 * `ffi.julia.MallocArray64`
-* `ffi.julia.MallocArray32`
+* `ffi.julia.MallocArray32`  (not done, yet)
 
 The `32` and `64` indicate whether the pointers and integers involved are 32 or 64 bits. Match these to the version of Julia you are using. It also includes `ffi.types.pointer64` for use on 64-bit versions of Julia in place of `ffi.types.pointer`.
 
