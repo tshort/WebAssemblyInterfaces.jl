@@ -6,7 +6,7 @@ NOTE: This is still experimental, and not all features have been tested with Web
 
 For a working example, see this [Lorenz Attraction App in Julia](http://tshort.github.io/Lorenz-WebAssembly-Model.jl). 
 
-This is a small package to write out definitions in JavaScript that correspond to Julia types and object definitions. This JavaScript code is meant to be used with the [wasm-ffi](https://github.com/DeMille/wasm-ffi/tree/master) package, a great package for interfacing between JavaScript and WebAssembly. This allows JavaScript to read and write to memory that is shared by the Julia code (after being compiled to WebAssembly). The [wasm-ffi](https://github.com/DeMille/wasm-ffi/tree/master) package writes to the same memory layout used by Julia.
+This is a small package to write out definitions in JavaScript that correspond to Julia types and object definitions. This JavaScript code is meant to be used with the [wasm-ffi](https://github.com/DeMille/wasm-ffi/) package, a great package for interfacing between JavaScript and WebAssembly. This allows JavaScript to read and write to memory that is shared by the Julia code (after being compiled to WebAssembly). The [wasm-ffi](https://github.com/DeMille/wasm-ffi/) package writes to the same memory layout used by Julia.
 
 The following types are supported:
 * Structs, tuples, named tuples
@@ -93,9 +93,19 @@ wasm_path = compile_wasm(f, Tuple{typeof(x)}, flags = `walloc.o`)
 
 ```
 
+### wasm-ffi
+
+This repository also contains distribution code for the [wasm-ffi](https://github.com/DeMille/wasm-ffi/) package from [this fork](https://github.com/tshort/wasm-ffi/). This includes extensions for supporting Julia code. That includes:
+* `ffi.julia.Array64`
+* `ffi.julia.Array32`
+* `ffi.julia.MallocArray64`
+* `ffi.julia.MallocArray32`
+
+The `32` and `64` indicate whether the pointers and integers involved are 32 or 64 bits. Match these to the version of Julia you are using. It also includes `ffi.types.pointer64` for use on 64-bit versions of Julia in place of `ffi.types.pointer`.
+
 ### Options going forward
 
-* Should we include a copy of `wasm-ffi.browser.js`? It makes sense if we add support for more Julia types.
+* We include a copy of `wasm-ffi.browser.js`. Can we make it easier to use?
 
 * Figure out where `walloc.o` should live. Should we add object code from other sources to make WebAssembly easier?
 
