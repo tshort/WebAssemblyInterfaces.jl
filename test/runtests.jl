@@ -1,3 +1,4 @@
+using StaticTools
 using WebAssemblyInterfaces
 using Test
 
@@ -13,13 +14,14 @@ struct Y{A,B,C}
     c::C
 end
 
-x = X(2, Y(1.1, 2, (1, 1.1)), Y(1, 2, 3))
+jsz = sizeof(Int) * 8
+
+x = X(Int64(2), Y(1.1, Int64(2), (Int64(1), 1.1)), Y(Int64(1), Int64(2), Int64(3)))
 
 
 @testset "Basics" begin
 
 s = js_repr(x)
-println(s)
 
 @test contains(s, """
 const Y = new ffi.Struct({
@@ -48,7 +50,11 @@ c: 3,
 
 s = js_repr(ones(3,2))
 
-@test contains(s, string("new ffi.julia.Array", sizeof(Int) * 8, "('f64', [3, 2], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, ])"))
+@test contains(s, string("new ffi.julia.Array$jsz('f64', [3, 2], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, ])"))
+
+s = js_repr(MallocArray(ones(3)))
+
+@test contains(s, string("new ffi.julia.MallocArray$jsz('f64', 1, [1.0, 1.0, 1.0, ])"))
 
 
 # More sophisticated tests could use NodeJS.jl to run some JavaScript/WebAssembly.

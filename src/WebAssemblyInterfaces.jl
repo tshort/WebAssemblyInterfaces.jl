@@ -1,7 +1,5 @@
 module WebAssemblyInterfaces
 
-using StaticTools
-
 export js_repr, js_types, js_def
 
 function fixname(s)
@@ -77,10 +75,6 @@ function definition_repr(ctx::Context, ::Type{<:Enum})  # kludge for now
     string("'int32'")
 end 
 
-function definition_repr(ctx::Context, ::Type{<:MallocArray{T,N}}) where {T,N}
-    string("ffi.julia.MallocArray", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", N, ")")
-end 
-
 function definition_repr(ctx::Context, ::Type{<:Array{T,N}}) where {T,N}
     string("ffi.julia.Array", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", N, ")")
 end 
@@ -129,11 +123,6 @@ end
 
 function js_def(x::Enum; ctx = Context())  # kludge for now
     Int32(x)
-end 
-
-function js_def(x::MallocArray{T,N}; ctx = Context()) where {T,N}
-    string("new ffi.julia.MallocArray", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", N, ", [", 
-           (string(js_def(v; ctx), ", ") for v in x)..., "])")
 end 
 
 function js_def(x::Array{T,N}; ctx = Context()) where {T,N}
