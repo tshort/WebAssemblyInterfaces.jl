@@ -1,5 +1,7 @@
 module WebAssemblyInterfaces
 
+using StaticTools
+
 export js_repr, js_types, js_def
 
 function fixname(s)
@@ -22,12 +24,6 @@ struct Context
 end
 Context(; type_map = copy(default_map), new_types = String[]) = Context(type_map, new_types)
 
-function definition_repr(ctx::Context, x::Type)
-    if !isconcretetype()
-        return nothing
-    end
-end
-
 function definition_repr(ctx::Context, x::AbstractVector{T}) where T 
     string("[", definition_repr(ctx, x[1]), ", ", length(x), "]")
 end
@@ -48,7 +44,11 @@ function definition_repr(ctx::Context, x::Type{T}) where T
         s = string("const ", name, " = new ffi.Struct({\n")
         for i in 1:fieldcount(T)
             FT = fieldtype(T, i)
-            if sizeof(FT) > 0
+            sz = try sizeof(FT) catch; sizeof(Int) end
+            if sz > 0
+                if ismutabletype(FT)
+                    FT = Base.RefValue{FT}
+                end
                 s *= string("    ", 
                             fixname(string(fieldname(T, i))), ": ", 
                             get(ctx.type_map, FT, definition_repr(ctx, FT)),
@@ -70,12 +70,21 @@ function definition_repr(ctx::Context, T::Type{<:Tuple})
 end 
 
 function definition_repr(ctx::Context, ::Type{Base.RefValue{T}}) where T
-    string("types.pointer(", definition_repr(ctx, T), ")")
+    string("ffi.types.pointer", sizeof(Int) == 4 ? "(" : "64(", definition_repr(ctx, T), ")")
 end 
 
 function definition_repr(ctx::Context, ::Type{<:Enum})  # kludge for now
     string("'int32'")
 end 
+
+function definition_repr(ctx::Context, ::Type{<:MallocArray{T,N}}) where {T,N}
+    string("ffi.julia.MallocArray", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", N, ")")
+end 
+
+function definition_repr(ctx::Context, ::Type{<:Array{T,N}}) where {T,N}
+    string("ffi.julia.Array", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", N, ")")
+end 
+
 
 function js_types(T::Type; ctx = Context())
     definition_repr(ctx, T)
@@ -87,9 +96,14 @@ function js_def(x::T; ctx = Context()) where T
     s = string("new ", typename, "({\n")
     for i in 1:fieldcount(T)
         FT = fieldtype(T, i)
-        if sizeof(FT) > 0
+        sz = try sizeof(FT) catch; sizeof(Int) end
+        if sz > 0
+            val = getfield(x, i)
+            if ismutabletype(FT)
+                val = Ref(val)
+            end
             s *= string(fixname(string(fieldname(T, i))), ": ", 
-                        js_def(getfield(x, i), ctx = ctx),
+                        js_def(val, ctx = ctx),
                         ",\n")
         end
     end
@@ -104,7 +118,7 @@ function js_def(x::NTuple{N,T}; ctx = Context()) where {N,T}
 end
 
 function js_def(x::Base.RefValue{T}; ctx = Context()) where T
-    string("new Pointer(", definition_repr(ctx, T), ", ", js_def(x[]; ctx), ")")
+    string("new ffi.Pointer(", definition_repr(ctx, T), ", ", js_def(x[]; ctx), ")")
 end
 
 function js_def(x::T; ctx = Context()) where T <: Tuple
@@ -115,6 +129,16 @@ end
 
 function js_def(x::Enum; ctx = Context())  # kludge for now
     Int32(x)
+end 
+
+function js_def(x::MallocArray{T,N}; ctx = Context()) where {T,N}
+    string("new ffi.julia.MallocArray", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", N, ", [", 
+           (string(js_def(v; ctx), ", ") for v in x)..., "])")
+end 
+
+function js_def(x::Array{T,N}; ctx = Context()) where {T,N}
+    string("new ffi.julia.Array", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", [size(x)...], ", [", 
+           (string(js_def(v; ctx), ", ") for v in x)..., "])")
 end 
 
 function js_repr(x)
