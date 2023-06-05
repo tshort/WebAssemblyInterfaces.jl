@@ -2304,10 +2304,25 @@ function Array64(typedef, dims = 1, initialValues) {
     : Array;
 }
 
+function JuliaTuple(tupleTypes, values) {
+  // This is copied from Rust's
+  const fields = {};
+
+  tupleTypes.forEach((type, i) => {
+    fields[i] = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])(type);
+  });
+
+  const Tuple = new __WEBPACK_IMPORTED_MODULE_0__Struct__["a" /* default */](fields);
+
+  return (values)
+    ? new Tuple(values)
+    : Tuple;
+}
+
 const julia = {
   MallocArray64:  MallocArray64,
   Array64:        Array64,
-
+  Tuple:          JuliaTuple,
 };
 
 

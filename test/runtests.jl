@@ -27,7 +27,7 @@ s = js_repr(x)
 const Y = new ffi.Struct({
     a: 'f64',
     b: 'int64',
-    c: ffi.rust.tuple(['int64','f64']),
+    c: ffi.julia.Tuple(['int64','f64']),
 });
 """)
 
@@ -37,7 +37,7 @@ a: 2,
 b: new Y({
 a: 1.1,
 b: 2,
-c: new ffi.rust.tuple(['int64','f64'], [1, 1.1]),
+c: new ffi.julia.Tuple(['int64','f64'], [1, 1.1]),
 }),
 c: new YInt64_Int64_Int64({
 a: 1,
