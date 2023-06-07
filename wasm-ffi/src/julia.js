@@ -1,21 +1,35 @@
 import Struct from './Struct';
-import { types, parseType, Pointer } from './types';
+import { types, parseType, Pointer, CustomType } from './types';
 import { encode, decode } from './encoding';
 import { assert, vslice, isNil, addStringFns, addArrayFns, makeIterable } from './misc';
-
 
 // get the symbol for struct-data since we need access here
 const DATA = (typeof Symbol !== 'undefined')
   ? Symbol.for('struct-data')
   : '__data';
 
-function MallocArray64(typedef, n, initialValues) {
+const isJulia32 = DATA.isJulia32;
+
+const JLInt = isJulia32 ? 'int32' : 'int64';
+
+const NOTHING = new CustomType(0);
+
+function jlintvalue(x) {
+  return isJulia32 ? x : new Int32Array([x, 0]);
+}
+
+function jlpointer(type) {
+  return isJulia32 ? types.pointer(type) : types.pointer64(type);
+}
+
+function MallocArray(typedef, initialValues) {
   const type = parseType(typedef);
 
   const Base = new Struct({
-    ptr: ffi.types.pointer64(type),
-    length: 'uint64',
-    size: ['uint64', n],
+    ptr: jlpointer(type),
+    length: 'uint32',
+    dummy1: isJulia32 ? NOTHING : 'uint32', 
+    size: ['uint32', isJulia32 ? 1 : 2],
     /* values */
   });
 
@@ -35,7 +49,7 @@ function MallocArray64(typedef, n, initialValues) {
     set(values) {
       this.ptr = new Pointer([type, values.length], values);
       this.length = values.length;
-      // this.cap = values.length;
+      this.size = isJulia32 ? [values.length] : [values.length, 0];
     },
   });
 
@@ -45,7 +59,9 @@ function MallocArray64(typedef, n, initialValues) {
   class Vector extends Base {
     constructor(values) {
       super();
-      if (values) this.values = values;
+      if (values) {
+        this.values = values;
+      }
     }
 
     free() {
@@ -58,16 +74,17 @@ function MallocArray64(typedef, n, initialValues) {
     : Vector;
 }
 
-function Array64(typedef, dims = 1, initialValues) {
+function Array(typedef, ndims = 1, initialValues, dims) {
   const type = parseType(typedef);
 
   const Base = new Struct({
-    ptr: ffi.types.pointer64(type),
-    length: 'uint64',
+    ptr: jlpointer(type),
+    length: 'uint32',
+    dummy: isJulia32 ? NOTHING : 'uint32',
     flags:  'uint16',
     elsize: 'uint16',
     offset: 'uint32',
-    size: ['uint64', dims],
+    size: ['uint32', isJulia32 ? ndims : 2 * ndims],
     /* values */
   });
 
@@ -87,10 +104,9 @@ function Array64(typedef, dims = 1, initialValues) {
     set(values) {
       this.ptr = new Pointer([type, values.length], values);
       this.length = values.length;
-      this.flags = dims.length * 4;
+      this.flags = ndims * 4;
       this.elsize = type.width;
       this.offset = 0;
-      this.size = dims;
     },
   });
 
@@ -100,7 +116,16 @@ function Array64(typedef, dims = 1, initialValues) {
   class Array extends Base {
     constructor(values) {
       super();
-      if (values) this.values = values;
+      if (values) {
+        this.values = values;
+        var sz = [];
+        if (!dims) dims = [values.length];
+        for (let i = 0; i < ndims; i++) {
+          sz.push(dims[i]);
+          if (!isJulia32) sz.push(0);
+        }
+        this.size = sz;
+      }
     }
 
     free() {
@@ -129,9 +154,11 @@ function JuliaTuple(tupleTypes, values) {
 }
 
 const julia = {
-  MallocArray64:  MallocArray64,
-  Array64:        Array64,
-  Tuple:          JuliaTuple,
+  MallocArray:  MallocArray,
+  Array:        Array,
+  Tuple:        JuliaTuple,
+  Int:          JLInt,
+  pointer:      jlpointer,
 };
 
 

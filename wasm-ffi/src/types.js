@@ -205,7 +205,7 @@ types.pointer64 = function(typedef) {
 
     read(view, wrapper) {
       const addr = view.getBigUint64(0, true /* little-endian */);
-      const data = new DataView(view.buffer, addr, type.width);
+      const data = new DataView(view.buffer, Number(addr), type.width);
 
       const pointer = new Pointer(type);
       pointer.view = data;

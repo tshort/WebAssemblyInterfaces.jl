@@ -68,7 +68,7 @@ function definition_repr(ctx::Context, T::Type{<:Tuple})
 end 
 
 function definition_repr(ctx::Context, ::Type{Base.RefValue{T}}) where T
-    string("ffi.types.pointer", sizeof(Int) == 4 ? "(" : "64(", definition_repr(ctx, T), ")")
+    string("ffi.julia.pointer(", definition_repr(ctx, T), ")")
 end 
 
 function definition_repr(ctx::Context, ::Type{<:Enum})  # kludge for now
@@ -76,7 +76,7 @@ function definition_repr(ctx::Context, ::Type{<:Enum})  # kludge for now
 end 
 
 function definition_repr(ctx::Context, ::Type{<:Array{T,N}}) where {T,N}
-    string("ffi.julia.Array", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", N, ")")
+    string("ffi.julia.Array(", definition_repr(ctx, T), ", ", N, ")")
 end 
 
 
@@ -126,8 +126,8 @@ function js_def(x::Enum; ctx = Context())  # kludge for now
 end 
 
 function js_def(x::Array{T,N}; ctx = Context()) where {T,N}
-    string("new ffi.julia.Array", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", [size(x)...], ", [", 
-           (string(js_def(v; ctx), ", ") for v in x)..., "])")
+    string("new ffi.julia.Array(", definition_repr(ctx, T), ", ", N, ", [", 
+           (string(js_def(v; ctx), ", ") for v in x)..., "]", N > 1 ? string(", ", [size(x)...], ")") : ")")
 end 
 
 function js_repr(x)
