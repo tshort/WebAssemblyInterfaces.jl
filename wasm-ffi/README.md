@@ -16,22 +16,26 @@ The `32` and `64` indicate whether the pointers and integers involved are 32 or 
 Here is an example of how to initialize an array in JavaScript. 
 ```js
 var N = 100;
-var x  = new ffi.julia.Array64('f64', [N], new Float64Array(N));
+var x  = new ffi.julia.Array('f64', 1, new Float64Array(N));
 ```
 The arguments are:
 
 * Element type: `'f64'`  
-* Dimensions: an array with the length along each dimension `[N]`
+* Number of dimensions: `1`
 * A JavaScript typed array to hold the contents: `new Float64Array(N)`
 
 Here is the JavaScript type definition for the variable `x`.
 
 ```js
-ffi.julia.Array64(`f64`, 1)
+ffi.julia.Array(`f64`, 1)
 ```
 
-For the type definition, the second argument is the number of dimensions
-in the array.
+For multidimensional arrays, another argument at the end is needed to specify `size`:
+
+```js
+var y  = new ffi.julia.Array('f64', 2, new Float64Array(6), [2,3]);
+```
+
 
 To build the packaged JavaScript files, run `npx webpack` in this folder. 
 To initialize NPM stuff, run `npm install`.
