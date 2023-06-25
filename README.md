@@ -101,8 +101,7 @@ This repository also contains distribution code for the [wasm-ffi](https://githu
 * `ffi.julia.Tuple`
 
 The default assumes a 64-bit version of Julia. This means that pointers and Ints are 64 bits. You can pass 
-`{ dialect: 'julia32' }` as the second argument (options) to `ffi.Wrapper`. `debug: true` is also a useful 
-option to monitor WebAssembly allocations.
+`{ dialect: 'julia32' }` as the second argument (options) to `ffi.Wrapper` if code was generated with a 32-bit version of Julia. `debug: true` is also a useful option to monitor WebAssembly allocations.
 
 ### Options going forward
 

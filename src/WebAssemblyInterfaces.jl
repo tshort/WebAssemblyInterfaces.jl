@@ -39,7 +39,7 @@ function definition_repr(ctx::Context, x::Type{T}) where T
             name = fixname(tname(T))
         end
         ctx.type_map[T] = name
-        s = string("const ", name, " = new ffi.Struct({\n")
+        s = string("var ", name, " = new ffi.Struct({\n")
         for i in 1:fieldcount(T)
             FT = fieldtype(T, i)
             sz = try sizeof(FT) catch; sizeof(Int) end

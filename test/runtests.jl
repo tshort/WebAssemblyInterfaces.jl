@@ -24,7 +24,7 @@ x = X(Int64(2), Y(1.1, Int64(2), (Int64(1), 1.1)), Y(Int64(1), Int64(2), Int64(3
 s = js_repr(x)
 
 @test contains(s, """
-const Y = new ffi.Struct({
+var Y = new ffi.Struct({
     a: 'f64',
     b: 'int64',
     c: ffi.julia.Tuple(['int64','f64']),
@@ -59,4 +59,8 @@ s = js_repr(MallocArray(ones(3)))
 
 # More sophisticated tests could use NodeJS.jl to run some JavaScript/WebAssembly.
 
+end
+
+@testset "WebAssembly" begin
+    include("test-wasm.jl")
 end

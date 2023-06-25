@@ -1300,7 +1300,7 @@ function fetch_polyfill(file) {
 }
 
 
-const fetchFn = (typeof fetch === 'function' && fetch) || fetch_polyfill;
+const fetchFn = (typeof window === 'undefined' && fetch_polyfill) || fetch;
 
 
 // gets the wasm at a url and instantiates it.
@@ -2214,14 +2214,14 @@ function jlpointer(type) {
   return isJulia32 ? __WEBPACK_IMPORTED_MODULE_1__types__["e" /* types */].pointer(type) : __WEBPACK_IMPORTED_MODULE_1__types__["e" /* types */].pointer64(type);
 }
 
-function MallocArray(typedef, initialValues) {
+function MallocArray(typedef, ndims = 1, initialValues, dims) {
   const type = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])(typedef);
 
   const Base = new __WEBPACK_IMPORTED_MODULE_0__Struct__["a" /* default */]({
     ptr: jlpointer(type),
     length: 'uint32',
     dummy1: isJulia32 ? NOTHING : 'uint32', 
-    size: ['uint32', isJulia32 ? 1 : 2],
+    size: ['uint32', isJulia32 ? ndims : 2 * ndims],
     /* values */
   });
 
@@ -2248,11 +2248,18 @@ function MallocArray(typedef, initialValues) {
   Object(__WEBPACK_IMPORTED_MODULE_3__misc__["a" /* addArrayFns */])(Base);
   Object(__WEBPACK_IMPORTED_MODULE_3__misc__["e" /* makeIterable */])(Base);
 
-  class Vector extends Base {
+  class MArray extends Base {
     constructor(values) {
       super();
       if (values) {
         this.values = values;
+        var sz = [];
+        if (!dims) dims = [values.length];
+        for (let i = 0; i < ndims; i++) {
+          sz.push(dims[i]);
+          if (!isJulia32) sz.push(0);
+        }
+        this.size = sz;
       }
     }
 
@@ -2262,8 +2269,8 @@ function MallocArray(typedef, initialValues) {
   }
 
   return (initialValues)
-    ? new Vector(initialValues)
-    : Vector;
+    ? new MArray(initialValues)
+    : MArray;
 }
 
 function Array(typedef, ndims = 1, initialValues, dims) {
