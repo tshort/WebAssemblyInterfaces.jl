@@ -1,7 +1,5 @@
-using TestEnv
-TestEnv.activate("WebAssemblyInterfaces")
-using Pkg
-Pkg.develop("StaticCompiler")
+# using TestEnv
+# TestEnv.activate("WebAssemblyInterfaces")
 
 using Test
 
