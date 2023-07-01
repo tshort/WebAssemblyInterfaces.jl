@@ -3,19 +3,24 @@ uuid = "74d8c2bb-7b3a-4d47-ac1c-f80c5e9b8189"
 authors = ["Tom Short"]
 version = "1.1.0"
 
+[deps]
+
 [weakdeps]
 StaticTools = "86c06d3c-3f03-46de-9781-57580aa96d0a"
+
+[extensions]
+WebAssemblyInterfacesStaticToolsExt = "StaticTools"
 
 [compat]
 StaticTools = "v0.8"
 julia = "1.9"
 
-[extensions]
-WebAssemblyInterfacesStaticToolsExt = "StaticTools"
-
 [extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+# NodeCall = "84d67a5e-1aa2-4817-a501-81e0ebf70bff"
+NodeJS = "2bd173c7-0d6d-553b-b6af-13a54713934c"
+StaticCompiler = "81625895-6c0f-48fc-b932-11a18313743c"
 StaticTools = "86c06d3c-3f03-46de-9781-57580aa96d0a"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "StaticTools"]
+test = ["Test", "StaticCompiler", "StaticTools", "NodeJS"]

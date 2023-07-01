@@ -2,6 +2,8 @@ module WebAssemblyInterfaces
 
 export js_repr, js_types, js_def
 
+const SZ = Int == Int32 ? 32 : 64 
+
 function fixname(s)
     # JS names have to be letter, numbers, or underscore
     replace(string(s), r"[^a-zA-Z0-9_]" => s"_")
@@ -23,7 +25,7 @@ end
 Context(; type_map = copy(default_map), new_types = String[]) = Context(type_map, new_types)
 
 function definition_repr(ctx::Context, x::AbstractVector{T}) where T 
-    string("[", definition_repr(ctx, x[1]), ", ", length(x), "]")
+    string("[", definition_repr(ctx, x[1]), ", ", length(x), ", ", Int == Int32 ? 4 : 8, "]")
 end
 
 tname(::Type{T}) where {T} = string(nameof(T), join(T.parameters, "_"))
@@ -39,7 +41,7 @@ function definition_repr(ctx::Context, x::Type{T}) where T
             name = fixname(tname(T))
         end
         ctx.type_map[T] = name
-        s = string("const ", name, " = new ffi.Struct({\n")
+        s = string("var ", name, " = ffi.julia$SZ.Struct({\n")
         for i in 1:fieldcount(T)
             FT = fieldtype(T, i)
             sz = try sizeof(FT) catch; sizeof(Int) end
@@ -60,15 +62,15 @@ function definition_repr(ctx::Context, x::Type{T}) where T
 end
 
 function definition_repr(ctx::Context, ::Type{NTuple{N, T}}) where {N,T}
-    string("[", definition_repr(ctx, T), ", ", N, "]")
+    string("[", definition_repr(ctx, T), ", ", N, ", ", Int == Int32 ? 4 : 8, "]")
 end 
 
 function definition_repr(ctx::Context, T::Type{<:Tuple})
-    string("ffi.julia.Tuple([", join((definition_repr(ctx, p) for p in T.parameters), ","), "])")
+    string("ffi.julia$SZ.Tuple([", join((definition_repr(ctx, p) for p in T.parameters), ","), "])")
 end 
 
 function definition_repr(ctx::Context, ::Type{Base.RefValue{T}}) where T
-    string("ffi.types.pointer", sizeof(Int) == 4 ? "(" : "64(", definition_repr(ctx, T), ")")
+    string("ffi.julia$SZ.Pointer(", definition_repr(ctx, T), ")")
 end 
 
 function definition_repr(ctx::Context, ::Type{<:Enum})  # kludge for now
@@ -76,7 +78,7 @@ function definition_repr(ctx::Context, ::Type{<:Enum})  # kludge for now
 end 
 
 function definition_repr(ctx::Context, ::Type{<:Array{T,N}}) where {T,N}
-    string("ffi.julia.Array", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", N, ")")
+    string("ffi.julia$SZ.Array(", definition_repr(ctx, T), ", ", N, ")")
 end 
 
 
@@ -116,7 +118,7 @@ function js_def(x::Base.RefValue{T}; ctx = Context()) where T
 end
 
 function js_def(x::T; ctx = Context()) where T <: Tuple
-    string("new ffi.julia.Tuple([", 
+    string("new ffi.julia$SZ.Tuple([", 
            join((definition_repr(ctx, p) for p in T.parameters), ","), "], [",
            join((js_def(z; ctx) for z in x), ", "), "])")
 end
@@ -126,8 +128,8 @@ function js_def(x::Enum; ctx = Context())  # kludge for now
 end 
 
 function js_def(x::Array{T,N}; ctx = Context()) where {T,N}
-    string("new ffi.julia.Array", sizeof(Int) * 8, "(", definition_repr(ctx, T), ", ", [size(x)...], ", [", 
-           (string(js_def(v; ctx), ", ") for v in x)..., "])")
+    string("new ffi.julia$SZ.Array(", definition_repr(ctx, T), ", ", N, ", [", 
+           (string(js_def(v; ctx), ", ") for v in x)..., "]", N > 1 ? string(", ", [size(x)...], ")") : ")")
 end 
 
 function js_repr(x)

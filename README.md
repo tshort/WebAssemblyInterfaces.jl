@@ -49,7 +49,7 @@ Here is the JavaScript code that is printed:
 const Y = new ffi.Struct({
     a: 'f64',
     b: 'int64',
-    c: ffi.rust.tuple(['int64','f64']),
+    c: ffi.julia.Tuple(['int64','f64']),
 });
 
 const YInt64_Int64_Int64 = new ffi.Struct({
@@ -69,7 +69,7 @@ a: 2,
 b: new Y({
 a: 1.1,
 b: 2,
-c: new ffi.rust.tuple(['int64','f64'], [1, 1.1]),
+c: new ffi.julia.Tuple(['int64','f64'], [1, 1.1]),
 }),
 c: new YInt64_Int64_Int64({
 a: 1,
@@ -96,12 +96,12 @@ wasm_path = compile_wasm(f, Tuple{typeof(x)}, flags = `walloc.o`)
 ### wasm-ffi
 
 This repository also contains distribution code for the [wasm-ffi](https://github.com/DeMille/wasm-ffi/) package from [this fork](https://github.com/tshort/wasm-ffi/). This includes extensions for supporting Julia code. That includes:
-* `ffi.julia.Array64`
-* `ffi.julia.Array32`  (not done, yet)
-* `ffi.julia.MallocArray64`
-* `ffi.julia.MallocArray32`  (not done, yet)
+* `ffi.julia.Array`
+* `ffi.julia.MallocArray`
+* `ffi.julia.Tuple`
 
-The `32` and `64` indicate whether the pointers and integers involved are 32 or 64 bits. Match these to the version of Julia you are using. It also includes `ffi.types.pointer64` for use on 64-bit versions of Julia in place of `ffi.types.pointer`.
+The default assumes a 64-bit version of Julia. This means that pointers and Ints are 64 bits. You can pass 
+`{ dialect: 'julia32' }` as the second argument (options) to `ffi.Wrapper` if code was generated with a 32-bit version of Julia. `debug: true` is also a useful option to monitor WebAssembly allocations.
 
 ### Options going forward
 

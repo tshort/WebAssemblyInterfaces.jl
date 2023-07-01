@@ -55,7 +55,7 @@ function fetch_polyfill(file) {
 }
 
 
-const fetchFn = (typeof fetch === 'function' && fetch) || fetch_polyfill;
+const fetchFn = (typeof window === 'undefined' && fetch_polyfill) || fetch;
 
 
 // gets the wasm at a url and instantiates it.
