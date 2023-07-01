@@ -18,16 +18,17 @@ jsz = sizeof(Int) * 8
 
 x = X(Int64(2), Y(1.1, Int64(2), (Int64(1), 1.1)), Y(Int64(1), Int64(2), Int64(3)))
 
+SZ = Int == Int32 ? 32 : 64
 
 @testset "Basics" begin
 
 s = js_repr(x)
 
 @test contains(s, """
-var Y = new ffi.Struct({
+var Y = ffi.julia$SZ.Struct({
     a: 'f64',
     b: 'int64',
-    c: ffi.julia.Tuple(['int64','f64']),
+    c: ffi.julia$SZ.Tuple(['int64','f64']),
 });
 """)
 
@@ -37,7 +38,7 @@ a: 2,
 b: new Y({
 a: 1.1,
 b: 2,
-c: new ffi.julia.Tuple(['int64','f64'], [1, 1.1]),
+c: new ffi.julia$SZ.Tuple(['int64','f64'], [1, 1.1]),
 }),
 c: new YInt64_Int64_Int64({
 a: 1,
@@ -50,11 +51,11 @@ c: 3,
 
 s = js_repr(ones(3,2))
 
-@test contains(s, string("new ffi.julia.Array('f64', 2, [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, ], [3, 2])"))
+@test contains(s, string("new ffi.julia$SZ.Array('f64', 2, [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, ], [3, 2])"))
 
 s = js_repr(MallocArray(ones(3)))
 
-@test contains(s, string("new ffi.julia.MallocArray('f64', 1, [1.0, 1.0, 1.0, ])"))
+@test contains(s, string("new ffi.julia$SZ.MallocArray('f64', 1, [1.0, 1.0, 1.0, ])"))
 
 
 # More sophisticated tests could use NodeJS.jl to run some JavaScript/WebAssembly.

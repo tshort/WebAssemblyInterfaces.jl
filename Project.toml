@@ -16,10 +16,11 @@ StaticTools = "v0.8"
 julia = "1.9"
 
 [extras]
-NodeCall = "84d67a5e-1aa2-4817-a501-81e0ebf70bff"
+# NodeCall = "84d67a5e-1aa2-4817-a501-81e0ebf70bff"
+NodeJS = "2bd173c7-0d6d-553b-b6af-13a54713934c"
 StaticCompiler = "81625895-6c0f-48fc-b932-11a18313743c"
 StaticTools = "86c06d3c-3f03-46de-9781-57580aa96d0a"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "StaticCompiler", "StaticTools", "NodeCall"]
+test = ["Test", "StaticCompiler", "StaticTools", "NodeJS"]

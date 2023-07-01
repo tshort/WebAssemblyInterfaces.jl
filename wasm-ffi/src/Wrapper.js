@@ -97,7 +97,6 @@ class Wrapper {
       memory: opts.memory,
       debug: !!opts.debug,
       isAssemblyScript: dialect === 'assemblyscript',
-      isJulia32: dialect === 'julia32',
     };
 
     Object.entries(signatures).forEach(([fn, [returnType, argTypes = []]]) => {

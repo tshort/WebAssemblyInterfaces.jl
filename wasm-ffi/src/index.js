@@ -2,7 +2,7 @@ import { Wrapper, cwrap, ccall } from './Wrapper';
 import Struct from './Struct';
 import demangle from './demangle';
 import rust from './rust';
-import julia from './julia';
+import { julia32, julia64 } from './julia';
 import assemblyscript from './assemblyscript';
 import { types, Pointer, StringPointer, CustomType } from './types';
 
@@ -24,7 +24,8 @@ export default {
   CString, // deprecated
   demangle,
   rust,
-  julia,
+  julia32,
+  julia64,
   assemblyscript,
   _encodeUTF8,
   _decodeUTF8,
@@ -42,7 +43,8 @@ export {
   CString, // deprecated
   demangle,
   rust,
-  julia,
+  julia32,
+  julia64,
   assemblyscript,
   _encodeUTF8,
   _decodeUTF8,

@@ -305,12 +305,12 @@ types.string = {
 
 // An array (of known size) of sub-types.
 class ArrayType {
-  constructor(type, length) {
+  constructor(type, length, alignment) {
     this.type = type;
     this.length = length;
 
     this.width = type.width * length;
-    this.alignment = type.alignment;
+    this.alignment = alignment ? alignment : type.alignment;
   }
 
   read(view, wrapper) {
@@ -387,13 +387,14 @@ function parseType(typedef) {
   }
 
   if (Array.isArray(typedef)) {
-    assert(typedef.length === 2,
-      'Array type needs 2 arguments: [type, length], given: \n%s', typedef);
+    assert(typedef.length === 2 || typedef.length === 3,
+      'Array type needs 2 or 3 arguments: [type, length], given: \n%s', typedef);
 
     const type = parseType(typedef[0]);
     const length = typedef[1];
+    const alignment = typedef[2];
 
-    return new ArrayType(type, length);
+    return new ArrayType(type, length, alignment);
   }
 
   // make sure its an ok type interface

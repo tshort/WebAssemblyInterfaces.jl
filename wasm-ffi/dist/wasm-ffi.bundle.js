@@ -382,12 +382,12 @@ types.string = {
 
 // An array (of known size) of sub-types.
 class ArrayType {
-  constructor(type, length) {
+  constructor(type, length, alignment) {
     this.type = type;
     this.length = length;
 
     this.width = type.width * length;
-    this.alignment = type.alignment;
+    this.alignment = alignment ? alignment : type.alignment;
   }
 
   read(view, wrapper) {
@@ -464,13 +464,14 @@ function parseType(typedef) {
   }
 
   if (Array.isArray(typedef)) {
-    Object(__WEBPACK_IMPORTED_MODULE_0__misc__["c" /* assert */])(typedef.length === 2,
-      'Array type needs 2 arguments: [type, length], given: \n%s', typedef);
+    Object(__WEBPACK_IMPORTED_MODULE_0__misc__["c" /* assert */])(typedef.length === 2 || typedef.length === 3,
+      'Array type needs 2 or 3 arguments: [type, length], given: \n%s', typedef);
 
     const type = parseType(typedef[0]);
     const length = typedef[1];
+    const alignment = typedef[2];
 
-    return new ArrayType(type, length);
+    return new ArrayType(type, length, alignment);
   }
 
   // make sure its an ok type interface
@@ -1194,7 +1195,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "StringPointer", function() { return __WEBPACK_IMPORTED_MODULE_6__types__["c"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "demangle", function() { return __WEBPACK_IMPORTED_MODULE_2__demangle__["a"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "rust", function() { return __WEBPACK_IMPORTED_MODULE_3__rust__["a"]; });
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "julia", function() { return __WEBPACK_IMPORTED_MODULE_4__julia__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "julia32", function() { return __WEBPACK_IMPORTED_MODULE_4__julia__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "julia64", function() { return __WEBPACK_IMPORTED_MODULE_4__julia__["b"]; });
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "assemblyscript", function() { return __WEBPACK_IMPORTED_MODULE_5__assemblyscript__["a"]; });
 
 
@@ -1222,7 +1224,8 @@ const CString = __WEBPACK_IMPORTED_MODULE_6__types__["c" /* StringPointer */];
   CString, // deprecated
   demangle: __WEBPACK_IMPORTED_MODULE_2__demangle__["a" /* default */],
   rust: __WEBPACK_IMPORTED_MODULE_3__rust__["a" /* default */],
-  julia: __WEBPACK_IMPORTED_MODULE_4__julia__["a" /* default */],
+  julia32: __WEBPACK_IMPORTED_MODULE_4__julia__["a" /* julia32 */],
+  julia64: __WEBPACK_IMPORTED_MODULE_4__julia__["b" /* julia64 */],
   assemblyscript: __WEBPACK_IMPORTED_MODULE_5__assemblyscript__["a" /* default */],
   _encodeUTF8,
   _decodeUTF8,
@@ -1342,7 +1345,6 @@ class Wrapper {
       memory: opts.memory,
       debug: !!opts.debug,
       isAssemblyScript: dialect === 'assemblyscript',
-      isJulia32: dialect === 'julia32',
     };
 
     Object.entries(signatures).forEach(([fn, [returnType, argTypes = []]]) => {
@@ -2186,6 +2188,8 @@ const rust = {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return julia32; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return julia64; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__Struct__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__types__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__encoding__ = __webpack_require__(2);
@@ -2200,28 +2204,24 @@ const DATA = (typeof Symbol !== 'undefined')
   ? Symbol.for('struct-data')
   : '__data';
 
-const isJulia32 = DATA.isJulia32;
-
-const JLInt = isJulia32 ? 'int32' : 'int64';
 
 const NOTHING = new __WEBPACK_IMPORTED_MODULE_1__types__["a" /* CustomType */](0);
 
-function jlintvalue(x) {
-  return isJulia32 ? x : new Int32Array([x, 0]);
+function JuliaStruct32(fields = {}, opt = {}) {
+  return new __WEBPACK_IMPORTED_MODULE_0__Struct__["a" /* default */](fields, {alignment:4});
 }
 
-function jlpointer(type) {
-  return isJulia32 ? __WEBPACK_IMPORTED_MODULE_1__types__["e" /* types */].pointer(type) : __WEBPACK_IMPORTED_MODULE_1__types__["e" /* types */].pointer64(type);
+function JuliaStruct64(fields = {}, opt = {}) {
+  return new __WEBPACK_IMPORTED_MODULE_0__Struct__["a" /* default */](fields, {alignment:8});
 }
 
-function MallocArray(typedef, ndims = 1, initialValues, dims) {
+function MallocArray32(typedef, ndims = 1, initialValues, dims) {
   const type = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])(typedef);
 
-  const Base = new __WEBPACK_IMPORTED_MODULE_0__Struct__["a" /* default */]({
-    ptr: jlpointer(type),
+  const Base = JuliaStruct32({
+    ptr: __WEBPACK_IMPORTED_MODULE_1__types__["e" /* types */].pointer(type),
     length: 'uint32',
-    dummy1: isJulia32 ? NOTHING : 'uint32', 
-    size: ['uint32', isJulia32 ? ndims : 2 * ndims],
+    size: ['uint32', ndims],
     /* values */
   });
 
@@ -2241,7 +2241,7 @@ function MallocArray(typedef, ndims = 1, initialValues, dims) {
     set(values) {
       this.ptr = new __WEBPACK_IMPORTED_MODULE_1__types__["b" /* Pointer */]([type, values.length], values);
       this.length = values.length;
-      this.size = isJulia32 ? [values.length] : [values.length, 0];
+      this.size = [values.length];
     },
   });
 
@@ -2257,7 +2257,6 @@ function MallocArray(typedef, ndims = 1, initialValues, dims) {
         if (!dims) dims = [values.length];
         for (let i = 0; i < ndims; i++) {
           sz.push(dims[i]);
-          if (!isJulia32) sz.push(0);
         }
         this.size = sz;
       }
@@ -2273,17 +2272,75 @@ function MallocArray(typedef, ndims = 1, initialValues, dims) {
     : MArray;
 }
 
-function Array(typedef, ndims = 1, initialValues, dims) {
+function MallocArray64(typedef, ndims = 1, initialValues, dims) {
   const type = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])(typedef);
 
-  const Base = new __WEBPACK_IMPORTED_MODULE_0__Struct__["a" /* default */]({
-    ptr: jlpointer(type),
+  const Base = JuliaStruct64({
+    ptr: __WEBPACK_IMPORTED_MODULE_1__types__["e" /* types */].pointer64(type),
     length: 'uint32',
-    dummy: isJulia32 ? NOTHING : 'uint32',
+    dummy1: 'uint32', 
+    size: ['uint32', 2 * ndims],
+    /* values */
+  });
+
+  Object.defineProperty(Base.prototype, 'values', {
+    enumerable: true,
+
+    get() {
+      const memory = this[DATA].view.buffer;
+      const wrapper = this[DATA].wrapper;
+
+      const arrayType = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])([type, this.length]);
+      const view = new DataView(memory, this.ptr.ref(), arrayType.width);
+
+      return arrayType.read(view, wrapper);
+    },
+
+    set(values) {
+      this.ptr = new __WEBPACK_IMPORTED_MODULE_1__types__["b" /* Pointer */]([type, values.length], values);
+      this.length = values.length;
+      this.size = [values.length, 0];
+    },
+  });
+
+  Object(__WEBPACK_IMPORTED_MODULE_3__misc__["a" /* addArrayFns */])(Base);
+  Object(__WEBPACK_IMPORTED_MODULE_3__misc__["e" /* makeIterable */])(Base);
+
+  class MArray extends Base {
+    constructor(values) {
+      super();
+      if (values) {
+        this.values = values;
+        var sz = [];
+        if (!dims) dims = [values.length];
+        for (let i = 0; i < ndims; i++) {
+          sz.push(dims[i]);
+          sz.push(0);
+        }
+        this.size = sz;
+      }
+    }
+
+    free() {
+      super.free(true); // free ptr data
+    }
+  }
+
+  return (initialValues)
+    ? new MArray(initialValues)
+    : MArray;
+}
+
+function Array32(typedef, ndims = 1, initialValues, dims) {
+  const type = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])(typedef);
+
+  const Base = JuliaStruct32({
+    ptr: __WEBPACK_IMPORTED_MODULE_1__types__["e" /* types */].pointer(type),
+    length: 'uint32',
     flags:  'uint16',
     elsize: 'uint16',
     offset: 'uint32',
-    size: ['uint32', isJulia32 ? ndims : 2 * ndims],
+    size: ['uint32', ndims],
     /* values */
   });
 
@@ -2321,7 +2378,6 @@ function Array(typedef, ndims = 1, initialValues, dims) {
         if (!dims) dims = [values.length];
         for (let i = 0; i < ndims; i++) {
           sz.push(dims[i]);
-          if (!isJulia32) sz.push(0);
         }
         this.size = sz;
       }
@@ -2337,7 +2393,72 @@ function Array(typedef, ndims = 1, initialValues, dims) {
     : Array;
 }
 
-function JuliaTuple(tupleTypes, values) {
+function Array64(typedef, ndims = 1, initialValues, dims) {
+  const type = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])(typedef);
+
+  const Base = JuliaStruct64({
+    ptr: __WEBPACK_IMPORTED_MODULE_1__types__["e" /* types */].pointer64(type),
+    length: 'uint32',
+    dummy: 'uint32',
+    flags:  'uint16',
+    elsize: 'uint16',
+    offset: 'uint32',
+    size: ['uint32', 2 * ndims],
+    /* values */
+  });
+
+  Object.defineProperty(Base.prototype, 'values', {
+    enumerable: true,
+
+    get() {
+      const memory = this[DATA].view.buffer;
+      const wrapper = this[DATA].wrapper;
+
+      const arrayType = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])([type, this.length]);
+      const view = new DataView(memory, this.ptr.ref(), arrayType.width);
+
+      return arrayType.read(view, wrapper);
+    },
+
+    set(values) {
+      this.ptr = new __WEBPACK_IMPORTED_MODULE_1__types__["b" /* Pointer */]([type, values.length], values);
+      this.length = values.length;
+      this.flags = ndims * 4;
+      this.elsize = type.width;
+      this.offset = 0;
+    },
+  });
+
+  Object(__WEBPACK_IMPORTED_MODULE_3__misc__["a" /* addArrayFns */])(Base);
+  Object(__WEBPACK_IMPORTED_MODULE_3__misc__["e" /* makeIterable */])(Base);
+
+  class Array extends Base {
+    constructor(values) {
+      super();
+      if (values) {
+        this.values = values;
+        var sz = [];
+        if (!dims) dims = [values.length];
+        for (let i = 0; i < ndims; i++) {
+          sz.push(dims[i]);
+          sz.push(0);
+        }
+        this.size = sz;
+      }
+    }
+
+    free() {
+      super.free(true); // free ptr data
+    }
+  }
+
+  return (initialValues)
+    ? new Array(initialValues)
+    : Array;
+}
+
+
+function JuliaTuple32(tupleTypes, values) {
   // This is copied from Rust's
   const fields = {};
 
@@ -2345,23 +2466,45 @@ function JuliaTuple(tupleTypes, values) {
     fields[i] = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])(type);
   });
 
-  const Tuple = new __WEBPACK_IMPORTED_MODULE_0__Struct__["a" /* default */](fields);
+  const Tuple = JuliaStruct32(fields);
 
   return (values)
     ? new Tuple(values)
     : Tuple;
 }
 
-const julia = {
-  MallocArray:  MallocArray,
-  Array:        Array,
-  Tuple:        JuliaTuple,
-  Int:          JLInt,
-  pointer:      jlpointer,
+function JuliaTuple64(tupleTypes, values) {
+  // This is copied from Rust's
+  const fields = {};
+
+  tupleTypes.forEach((type, i) => {
+    fields[i] = Object(__WEBPACK_IMPORTED_MODULE_1__types__["d" /* parseType */])(type);
+  });
+
+  const Tuple = JuliaStruct64(fields);
+
+  return (values)
+    ? new Tuple(values)
+    : Tuple;
+}
+const julia32 = {
+  MallocArray:  MallocArray32,
+  Array:        Array32,
+  Tuple:        JuliaTuple32,
+  Struct:       JuliaStruct32,
+  Pointer:      __WEBPACK_IMPORTED_MODULE_1__types__["e" /* types */].pointer,
+};
+
+const julia64 = {
+  MallocArray:  MallocArray64,
+  Array:        Array64,
+  Tuple:        JuliaTuple64,
+  Struct:       JuliaStruct64,
+  Pointer:      __WEBPACK_IMPORTED_MODULE_1__types__["e" /* types */].pointer64,
 };
 
 
-/* harmony default export */ __webpack_exports__["a"] = (julia);
+
 
 
 /***/ }),
